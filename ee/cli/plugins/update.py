@@ -24,7 +24,7 @@ class EEUpdateController(CementBaseController):
     @expose(hide=True)
     def default(self):
         filename = "eeupdate" + time.strftime("%Y%m%d-%H%M%S")
-        EEDownload.download(self, [["http://rt.cx/eeup",
+        EEDownload.download(self, [["https://github.com/dharmin/easyengine/blob/master/install",
                                     "/tmp/{0}".format(filename),
                                     "update script"]])
         try:
