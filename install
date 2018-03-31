@@ -2,7 +2,7 @@
 
 # EasyEngine update script.
 # This script is designed to install latest EasyEngine or
-# to update current EasyEngine from 2.x to 3.x
+# to update current EasyEngine
 
 # Define echo function
 # Blue color
@@ -47,7 +47,7 @@ fi
 
 # Define variables for later use
 ee_branch=$1
-readonly ee_version_old="2.2.3"
+readonly ee_version_old="3.7.5"
 readonly ee_version_new="3.8.5"
 readonly ee_log_dir=/var/log/ee/
 readonly ee_install_log=/var/log/ee/install.log
