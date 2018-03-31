@@ -284,38 +284,6 @@ function ee_install()
     python3 setup.py install || ee_lib_error "Unable to install EasyEngine, exit status " $?
 }
 
-# Update EasyEngine configuration
-# Remove EasyEngine 2.x
-function ee_update()
-{
-    # Preserve old configuration
-    ee_lib_echo "Updating EasyEngine configuration, please wait..."
-
-    ee_grant_host=$(grep grant-host /etc/easyengine/ee.conf | awk '{ print $3 }' | head -1 )
-    ee_db_name=$(grep db-name /etc/easyengine/ee.conf | awk '{ print $3 }')
-    ee_db_user=$(grep db-name /etc/easyengine/ee.conf | awk '{ print $3 }')
-    ee_wp_prefix=$(grep prefix /etc/easyengine/ee.conf | awk '{ print $3 }')
-    ee_wp_user=$(grep 'user ' /etc/easyengine/ee.conf | grep -v db-user |awk '{ print $3 }')
-    ee_wp_pass=$(grep password /etc/easyengine/ee.conf | awk '{ print $3 }')
-    ee_wp_email=$(grep email /etc/easyengine/ee.conf | awk '{ print $3 }')
-    ee_ip_addr=$(grep ip-address /etc/easyengine/ee.conf |awk -F'=' '{ print $2 }')
-
-    sed -i "s/ip-address.*/ip-address = ${ee_ip_addr}/" /etc/ee/ee.conf && \
-    sed -i "s/grant-host.*/grant-host = ${ee_grant_host}/" /etc/ee/ee.conf && \
-    sed -i "s/db-name.*/db-name = ${db-name}/" /etc/ee/ee.conf && \
-    sed -i "s/db-user.*/db-user = ${ee_db_user}/" /etc/ee/ee.conf && \
-    sed -i "s/prefix.*/prefix = ${ee_wp_prefix}/" /etc/ee/ee.conf && \
-    sed -i "s/^user.*/user = ${ee_wp_user}/" /etc/ee/ee.conf && \
-    sed -i "s/password.*/password = ${ee_wp_password}/" /etc/ee/ee.conf && \
-    sed -i "s/email.*/email = ${ee_wp_email}/" /etc/ee/ee.conf || ee_lib_error "Unable to update configuration, exit status " $?
-
-    # Remove old EasyEngine
-    ee_lib_echo "Removing EasyEngine 2.x"
-    rm -rf /etc/bash_completion.d/ee /etc/easyengine/ /usr/share/easyengine/ /usr/local/lib/easyengine /usr/local/sbin/easyengine /usr/local/sbin/ee /var/log/easyengine
-
-    # Softlink to fix command not found error
-    ln -s /usr/local/bin/ee /usr/local/sbin/ee || ee_lib_error "Unable to create softlink to old EasyEngine, exit status " $?
-}
 
 function ee_upgrade_php(){
     #Upgrade PHP5.6 to a new repo supporting PHP 7.0
@@ -734,38 +702,11 @@ function ee_git_init()
 }
 
 # Update EasyEngine
-if [ -f /usr/local/sbin/easyengine ]; then
-    # Check old EasyEngine version
-    ee version | grep ${ee_version_old} &>> /dev/null
-    if [[ $? -ne 0 ]]; then
-        ee_lib_echo "EasyEngine $ee_version_old not found on your system" | tee -ai $ee_install_log
-        ee_lib_echo "Updating your EasyEngine to $ee_version_old for compability" | tee -ai $ee_install_log
-        wget -q https://raw.githubusercontent.com/EasyEngine/easyengine/old-stable/bin/update && bash update
-        if [[ $? -ne 0 ]]; then
-            ee_lib_echo_fail "Unable to update EasyEngine to $ee_version_old, exit status = " $?
-            exit 100
-        fi
-    fi
-    read -p "Update EasyEngine to $ee_version_new (y/n): " ee_ans
-    if [ "$ee_ans" = "y" ] || [ "$ee_ans" = "Y" ]; then
-        check_pagespeed | tee -ai $ee_install_log
-        ee_install_dep | tee -ai $ee_install_log
-        ee_sync_db 2&>>1 $EE_INSTALL_LOG
-        secure_ee_db | tee -ai $EE_INSTALL_LOG
-        ee_upgrade_php | tee -ai $ee_install_log
-        ee_install | tee -ai $ee_install_log
-        ee_update | tee -ai $ee_install_log
-        ee_update_latest | tee -ai $ee_install_log
-        ee_git_init | tee -ai $ee_install_log
-    else
-        ee_lib_error "Not updating EasyEngine to $ee_version_new, exit status = " 1
-    fi
-elif [ ! -f /usr/local/bin/ee ]; then
+if [ ! -f /usr/local/bin/ee ]; then
     ee_install_dep | tee -ai $ee_install_log
     ee_install | tee -ai $ee_install_log
     secure_ee_db | tee -ai $EE_INSTALL_LOG
     ee_git_init | tee -ai $ee_install_log
-
 else
     ee -v 2>&1 | grep $ee_version_new &>> /dev/null
     if [[ $? -ne 0 ]];then
